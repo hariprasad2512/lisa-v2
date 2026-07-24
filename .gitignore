@@ -1,0 +1,14 @@
+# .gitignore
+
+# Python Environments & Cache
+__pycache__/
+venv/
+env/
+*.pyc
+
+# Node/React Dependencies
+node_modules/
+dist/
+
+# Environment Variables (Secrets)
+.env
