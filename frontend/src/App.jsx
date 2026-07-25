@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Mic, MicOff, Loader2 } from 'lucide-react';
 
 function App() {
@@ -8,20 +8,112 @@ function App() {
     { role: 'assistant', content: 'Hello! I am Lisa. How can I help you today?' }
   ]);
 
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+
+  // NEW: Function to handle the 3-step FastAPI communication
+  const processAudio = async (audioBlob) => {
+    setIsProcessing(true);
+    try {
+      // 1. Send Audio to /transcribe (Ears)
+      const formData = new FormData();
+      formData.append("file", audioBlob, "voice.webm");
+      
+      const transcribeRes = await fetch("http://localhost:8000/transcribe", {
+        method: "POST",
+        body: formData
+      });
+      const transcribeData = await transcribeRes.json();
+      const userText = transcribeData.text || transcribeData.transcription; // Adjust based on your exact FastAPI return key
+      
+      // Update UI with what you said
+      setMessages(prev => [...prev, { role: 'user', content: userText }]);
+
+      // 2. Send Text to /chat (Brain)
+      const chatRes = await fetch("http://localhost:8000/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: userText }) 
+      });
+      const chatData = await chatRes.json();
+      const lisaText = chatData.response || chatData.message; // Adjust based on your exact FastAPI return key
+
+      // Update UI with Lisa's response
+      setMessages(prev => [...prev, { role: 'assistant', content: lisaText }]);
+
+      // 3. Send Text to /speak (Voice) and Play Audio
+      const speakRes = await fetch("http://localhost:8000/speak", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: lisaText })
+      });
+      
+      const audioBlobResponse = await speakRes.blob();
+      const audioUrl = URL.createObjectURL(audioBlobResponse);
+      const audio = new Audio(audioUrl);
+      audio.play();
+
+    } catch (error) {
+      console.error("Error communicating with backend:", error);
+      setMessages(prev => [...prev, { role: 'assistant', content: "Sorry, I had trouble connecting to my backend servers." }]);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        console.log("Audio Blob successfully created, sending to backend...");
+        
+        // NEW: Trigger the backend pipeline!
+        processAudio(audioBlob);
+
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch (error) {
+      console.error("Error accessing microphone:", error);
+      alert("Please allow microphone access to talk to Lisa.");
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  };
+
   const toggleRecording = () => {
-    setIsRecording(!isRecording);
-    // Future: Web Audio API integration will go here
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
   };
 
   return (
     <div className="flex flex-col h-screen bg-gray-900 text-gray-100 font-sans">
       
-      {/* Header */}
       <header className="flex items-center justify-center py-5 shadow-md bg-gray-800 border-b border-gray-700">
         <h1 className="text-2xl font-bold tracking-wider text-teal-400">LISA</h1>
       </header>
 
-      {/* Chat Stream Area */}
       <main className="flex-1 overflow-y-auto p-6 space-y-6">
         {messages.map((msg, index) => (
           <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -44,9 +136,7 @@ function App() {
         )}
       </main>
 
-      {/* Control Bar */}
       <footer className="p-6 bg-gray-800 border-t border-gray-700 flex flex-col items-center justify-center gap-4">
-        
         <button 
           onClick={toggleRecording}
           disabled={isProcessing}
@@ -62,12 +152,10 @@ function App() {
             <Mic className="w-8 h-8 text-white" />
           )}
         </button>
-        
         <p className="text-sm text-gray-400">
           {isRecording ? 'Listening...' : 'Tap to speak'}
         </p>
       </footer>
-
     </div>
   );
 }
