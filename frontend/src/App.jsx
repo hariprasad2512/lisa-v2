@@ -3,7 +3,7 @@ import Header from './components/Header';
 import ChatWindow from './components/ChatWindow';
 import MicrophoneControls from './components/MicrophoneControls';
 import { supabase } from './supabaseClient';
-import { useGeolocation } from './hooks/useGeolocation';
+import { useGeolocation } from './hooks/useGeoLocation';
 import { useAuth } from './hooks/useAuth';
 import { useAudioRecorder } from './hooks/useAudioRecorder';
 
