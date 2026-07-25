@@ -31,6 +31,8 @@ client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 class ChatRequest(BaseModel):
     text: str
 
+class SpeakRequest(BaseModel):
+    text: str
 
 @app.get("/")
 async def root():
