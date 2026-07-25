@@ -2,24 +2,28 @@ import { useState, useRef, useEffect } from 'react';
 import Header from './components/Header';
 import ChatWindow from './components/ChatWindow';
 import MicrophoneControls from './components/MicrophoneControls';
+import { supabase } from './supabaseClient';
+import { fetchCloudMessages, saveMessageToCloud, migrateGuestChatToCloud } from './chatService';
 
 function App() {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  
-  // 1. Initialize state by checking localStorage FIRST
+  const [currentUser, setCurrentUser] = useState(null);
+  const [location, setLocation] = useState(null);
+
+  // 1. Initialize messages (Checks localStorage first for guests)
   const [messages, setMessages] = useState(() => {
     const savedChat = localStorage.getItem('lisa_guest_chat');
-    // If there is history, parse it. If not, start with the default greeting.
     return savedChat ? JSON.parse(savedChat) : [
       { role: 'assistant', content: 'Hi I am Lisa! How can I assist you today?' }
     ];
   });
 
-    // Add location state
-  const [location, setLocation] = useState(null);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+  const activeAudioRef = useRef(null); 
 
-  // Fetch location on initial load
+  // 2. Fetch location on mount
   useEffect(() => {
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
@@ -29,30 +33,47 @@ function App() {
             longitude: position.coords.longitude
           });
         },
-        (error) => {
-          console.warn("Geolocation permission denied or error:", error.message);
-        }
+        (error) => console.warn("Geolocation warning:", error.message)
       );
     }
   }, []);
 
-  const mediaRecorderRef = useRef(null);
-  const audioChunksRef = useRef([]);
-  // Reference to hold the currently playing audio
-  const activeAudioRef = useRef(null); 
-
-  // 2. Auto-save to localStorage EVERY time messages update
+  // 3. Listen for Auth state changes & handle Guest-to-User migration
   useEffect(() => {
-    localStorage.setItem('lisa_guest_chat', JSON.stringify(messages));
-  }, [messages]);
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      const user = session?.user ?? null;
+      setCurrentUser(user);
+      if (user) {
+        // Migrate any guest chats sitting in localStorage, then fetch cloud history
+        await migrateGuestChatToCloud(user.id);
+        const cloudMsgs = await fetchCloudMessages(user.id);
+        if (cloudMsgs.length > 0) {
+          setMessages(cloudMsgs);
+        }
+      }
+    });
 
-  // Optional: Function to clear memory (can be wired to a button in the Header)
-  const clearMemory = () => {
-    if (window.confirm("Are you sure you want to clear the chat memory?")) {
-      setMessages([{ role: 'assistant', content: 'Hi I am Lisa! How can I assist you today?' }]);
-      localStorage.removeItem('lisa_guest_chat');
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      const user = session?.user ?? null;
+      setCurrentUser(user);
+      if (user) {
+        await migrateGuestChatToCloud(user.id);
+        const cloudMsgs = await fetchCloudMessages(user.id);
+        if (cloudMsgs.length > 0) {
+          setMessages(cloudMsgs);
+        }
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // 4. Handle persistence: localStorage for guests, Supabase for logged-in users
+  useEffect(() => {
+    if (!currentUser) {
+      localStorage.setItem('lisa_guest_chat', JSON.stringify(messages));
     }
-  };
+  }, [messages, currentUser]);
 
   const processAudio = async (audioBlob) => {
     setIsProcessing(true);
@@ -67,19 +88,32 @@ function App() {
       const transcribeData = await transcribeRes.json();
       const userText = transcribeData.text || transcribeData.transcription;
       
-      setMessages(prev => [...prev, { role: 'user', content: userText }]);
+      const newMessages = [...messages, { role: 'user', content: userText }];
+      setMessages(newMessages);
+
+      // If logged in, save user message directly to cloud
+      if (currentUser) {
+        await saveMessageToCloud(currentUser.id, 'user', userText);
+      }
 
       const chatRes = await fetch("http://localhost:8000/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: userText,
-           location: location
-         }) 
+        body: JSON.stringify({ 
+          text: userText,
+          location: location 
+        }) 
       });
       const chatData = await chatRes.json();
       const lisaText = chatData.response || chatData.message;
 
-      setMessages(prev => [...prev, { role: 'assistant', content: lisaText }]);
+      const finalMessages = [...newMessages, { role: 'assistant', content: lisaText }];
+      setMessages(finalMessages);
+
+      // If logged in, save assistant response directly to cloud
+      if (currentUser) {
+        await saveMessageToCloud(currentUser.id, 'assistant', lisaText);
+      }
 
       const speakRes = await fetch("http://localhost:8000/speak", {
         method: "POST",
@@ -91,7 +125,6 @@ function App() {
       const audioUrl = URL.createObjectURL(audioBlobResponse);
       const audio = new Audio(audioUrl);
       
-      // Store the playing audio in our ref so we can stop it later
       activeAudioRef.current = audio;
       audio.play();
 
@@ -104,10 +137,9 @@ function App() {
   };
 
   const startRecording = async () => {
-    // UX FEATURE: Stop Lisa from talking if she is currently speaking!
     if (activeAudioRef.current) {
       activeAudioRef.current.pause();
-      activeAudioRef.current.currentTime = 0; // Rewind to start to fully clear it
+      activeAudioRef.current.currentTime = 0; 
     }
 
     try {
@@ -151,9 +183,34 @@ function App() {
     }
   };
 
+    // Function to clear chat memory completely
+    // Bulletproof Clear Memory function
+  const clearMemory = async () => {
+    if (window.confirm("Are you sure you want to clear the entire chat history?")) {
+      // 1. Immediately update UI state
+      setMessages([{ role: 'assistant', content: 'Hi I am Lisa! How can I assist you today?' }]);
+
+      // 2. Clear local storage
+      localStorage.removeItem('lisa_guest_chat');
+
+      // 3. Clear Supabase table if logged in
+      if (currentUser) {
+        const { error } = await supabase
+          .from('messages')
+          .delete()
+          .eq('user_id', currentUser.id);
+
+        if (error) {
+          console.error("Error clearing cloud memory:", error.message);
+          alert("Could not clear cloud memory. Check Supabase RLS policies.");
+        }
+      }
+    }
+  };
+
   return (
-    <div className="flex flex-col h-screen bg-gray-950">
-      <Header onClear={clearMemory} />
+    <div className="flex flex-col h-screen bg-neutral-950 text-neutral-50">
+      <Header onClear={clearMemory}/>
       
       <ChatWindow 
         messages={messages} 
