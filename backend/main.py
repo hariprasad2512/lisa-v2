@@ -5,6 +5,8 @@ from pydantic import BaseModel
 from groq import Groq
 import shutil
 from dotenv import load_dotenv
+import edge_tts
+from fastapi.responses import FileResponse
 
 
 # Initialize the FastAPI app
@@ -93,5 +95,25 @@ async def chat_with_lisa(request: ChatRequest):
         
         return {"status": "success", "response": ai_response}
 
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# --- THE VOICE: Text-to-Speech ---
+@app.post("/speak")
+async def speak_text(request: ChatRequest):
+    try:
+        # 1. Define the voice and the temporary file name
+        # "en-US-AriaNeural" is a highly realistic, natural-sounding female voice
+        voice = "en-US-AvaNeural" 
+        output_file = "lisa_response.mp3"
+        
+        # 2. Generate the audio using edge-tts
+        communicate = edge_tts.Communicate(request.text, voice)
+        await communicate.save(output_file)
+        
+        # 3. Return the audio file directly to the frontend
+        return FileResponse(output_file, media_type="audio/mpeg")
+        
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
