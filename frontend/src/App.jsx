@@ -12,6 +12,8 @@ function App() {
 
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
+  // NEW: Reference to hold the currently playing audio
+  const activeAudioRef = useRef(null); 
 
   const processAudio = async (audioBlob) => {
     setIsProcessing(true);
@@ -47,6 +49,9 @@ function App() {
       const audioBlobResponse = await speakRes.blob();
       const audioUrl = URL.createObjectURL(audioBlobResponse);
       const audio = new Audio(audioUrl);
+      
+      // NEW: Store the playing audio in our ref so we can stop it later
+      activeAudioRef.current = audio;
       audio.play();
 
     } catch (error) {
@@ -58,6 +63,12 @@ function App() {
   };
 
   const startRecording = async () => {
+    // NEW UX FEATURE: Stop Lisa from talking if she is currently speaking!
+    if (activeAudioRef.current) {
+      activeAudioRef.current.pause();
+      activeAudioRef.current.currentTime = 0; // Rewind to start to fully clear it
+    }
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
