@@ -35,7 +35,7 @@ export default function MicrophoneControls({ isRecording, isProcessing, toggleRe
         
         {/* Dynamic subtext based on industry UX standards */}
         <p className="text-[11px] text-gray-500 tracking-wide uppercase">
-          {isRecording ? 'Press again to stop' : 'Lisa Voice Assistant'}
+          {isRecording ? 'Press again to stop' : 'Lisa Voice Assistant v1'}
         </p>
       </div>
 
