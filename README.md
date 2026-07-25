@@ -54,32 +54,11 @@ The project emphasizes:
 
 ## 🌍 Real-Time Web Search
 
-Lisa performs live internet searches whenever required, enabling responses beyond the LLM training cutoff.
 
-**Benefits**
-
-- Current news
-- Live events
-- Weather
-- Sports
-- Technology updates
-- General internet knowledge
-
----
 
 ## 📍 Browser Geolocation
 
-Lisa can automatically access browser location (with permission).
 
-This enables:
-
-- Nearby recommendations
-- Local weather
-- Restaurants
-- Travel information
-- Location-aware AI responses
-
----
 
 ## 🧠 Persistent Cloud Memory
 
@@ -101,29 +80,7 @@ Once users authenticate via Supabase:
 
 ---
 
-## 🔐 Secure Authentication
-
-Powered by Supabase Authentication.
-
-Supports:
-
-- Google OAuth
-- Secure session management
-- PostgreSQL cloud storage
-
----
-
-## 🎨 Modern UI/UX
-
-Features include:
-
-- Smooth animations
-- Responsive layout
-- Audio-reactive microphone controls
-- Beautiful chat interface
-- AI speech interruption
-- Mobile-friendly experience
-
+## 🔐 Secure Authentication by Supabase
 ---
 
 # 🏗️ System Architecture
