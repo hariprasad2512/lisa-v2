@@ -19,7 +19,7 @@
 **https://lisa-voice-assistant-ten.vercel.app/**
 
 ### ⚙️ Backend API
-**https://lisa-backend.onrender.com**
+**https://lisa-v2.onrender.com/**
 
 ---
 
