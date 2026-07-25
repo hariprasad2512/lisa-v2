@@ -16,4 +16,4 @@ app.add_middleware(
 # A simple root endpoint to test if the server is running
 @app.get("/")
 async def root():
-    return {"message": "Hello from Lisa! The FastAPI backend is running perfectly."}
+    return {"message": "Hello from Lisa! The FastAPI backend is running perfectly.","text": "All good ...Let's go"}
