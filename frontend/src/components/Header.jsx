@@ -1,33 +1,36 @@
-import { AudioLines } from 'lucide-react';
+import { AudioLines, Trash2 } from 'lucide-react';
+import AuthButton from './AuthButton';
 
-export default function Header() {
+export default function Header({ onClear }) {
   return (
-    <header className="flex items-center justify-between px-8 py-5 bg-gray-950/70 backdrop-blur-xl border-b border-white/5 sticky top-0 z-50">
-      
-      {/* Logo & Branding Area */}
+    <header className="flex items-center justify-between px-6 py-4 border-b border-neutral-800/60 bg-neutral-950/80 backdrop-blur-md">
       <div className="flex items-center gap-3">
-        {/* Modern Glassmorphic Logo Container */}
-        <div className="p-2 bg-gradient-to-br from-teal-500/10 to-emerald-500/10 rounded-xl border border-teal-500/20 shadow-[0_0_15px_rgba(20,184,166,0.1)]">
-          <AudioLines className="w-5 h-5 text-teal-400" />
+        <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 flex items-center justify-center shadow-lg shadow-emerald-500/5">
+          <AudioLines className="w-5 h-5 text-emerald-400 animate-pulse" />
         </div>
-        
-        {/* Modernized Font: Tighter tracking, cleaner weight */}
-        <h1 className="text-xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-emerald-200">
-          Lisa.
-        </h1>
+        <div>
+          <h1 className="text-base font-semibold tracking-tight text-neutral-100">Lisa</h1>
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span className="text-xs text-neutral-400 font-medium">Ready</span>
+          </div>
+        </div>
       </div>
 
-      {/* Consumer-Friendly Status Indicator */}
-      <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-900/50 rounded-full border border-gray-800/50">
-        <div className="relative flex h-2 w-2">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-        </div>
-        <span className="text-[15px] font-medium tracking-wide text-gray-400">
-          Ready
-        </span>
-      </div>
+      <div className="flex items-center gap-3">
+        {/* Clear Chat Button */}
+        <button
+          onClick={onClear}
+          title="Clear Chat History"
+          className="flex items-center gap-1.5 bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-neutral-400 hover:text-neutral-200 px-3 py-1.5 rounded-full text-xs font-medium transition-all shadow-sm"
+        >
+          <Trash2 className="w-3.5 h-3.5 text-neutral-400" />
+          <span>Reset</span>
+        </button>
 
+        {/* Google Sign-In Button */}
+        <AuthButton />
+      </div>
     </header>
   );
 }
