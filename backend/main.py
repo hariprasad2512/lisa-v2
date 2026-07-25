@@ -28,24 +28,32 @@ client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 async def root():
     return {"message": "Hello from Lisa! The FastAPI backend is running perfectly."}
 
+
 # --- THE EARS: Speech-to-Text ---
 @app.post("/transcribe")
 async def transcribe_audio(file: UploadFile = File(...)):
+    temp_file_path = f"temp_{file.filename}"
     try:
         # 1. Save the uploaded audio file temporarily
-        temp_file_path = f"temp_{file.filename}"
         with open(temp_file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
             
-        # 2. (Placeholder) Send to Groq Whisper for transcription
-        # We will add the actual Groq API call here in a second!
-        simulated_text = "This is a simulated transcription of your voice."
+        # 2. Send the file to Groq's Whisper API
+        with open(temp_file_path, "rb") as audio_file:
+            transcription = client.audio.transcriptions.create(
+                file=audio_file,
+                model="whisper-large-v3-turbo",
+                response_format="json"
+            )
         
         # 3. Clean up the temporary file
         os.remove(temp_file_path)
         
         # 4. Return the transcribed text to the frontend
-        return {"status": "success", "text": simulated_text}
+        return {"status": "success", "text": transcription.text}
 
     except Exception as e:
+        # Safety net: Ensure the file gets deleted even if the API call fails
+        if os.path.exists(temp_file_path):
+            os.remove(temp_file_path)
         raise HTTPException(status_code=500, detail=str(e))
