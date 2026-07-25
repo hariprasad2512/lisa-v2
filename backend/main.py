@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 import edge_tts
 from fastapi.responses import FileResponse
 from typing import Optional, Dict
-
+from ddgs import DDGS
 # Initialize the FastAPI app
 app = FastAPI(title="Lisa Voice Assistant API")
 
@@ -69,35 +69,50 @@ async def transcribe_audio(file: UploadFile = File(...)):
             os.remove(temp_file_path)
         raise HTTPException(status_code=500, detail=str(e))
 
+def search_web(query: str) -> str:
+    try:
+        with DDGS() as ddgs:
+            # Fetch top 3 results
+            results = [r['body'] for r in ddgs.text(query, max_results=3)]
+            if results:
+                return " ".join(results)
+    except Exception as e:
+        print(f"Web search error: {e}")
+    return "No live search results found."
+
+
 
 # --- THE BRAIN: LLM Routing & Processing ---
 @app.post("/chat")
 async def chat_with_lisa(request: ChatRequest):
-    try:
-        # Send the user's text to Llama 3.3 via Groq
-        location_context = ""
-        if request.location:
-            location_context = f"\nUser's Current Coordinates: Latitude {request.location.get('latitude')}, Longitude {request.location.get('longitude')} (Tailored for hyper-local accuracy like weather or regional queries)."
+    user_text = request.text
+    location_context = ""
+    if request.location:
+        location_context = f"\nUser's Current Coordinates: Latitude {request.location.get('latitude')}, Longitude {request.location.get('longitude')}."
 
-        system_prompt = (
-            "You are Lisa, a friendly, modern, and concise voice assistant. "
-            "Keep your answers short, conversational, and direct, as they will be spoken out loud. "
-            f"{location_context}"
-        )
+    # Check if the query implies needing live information
+    live_info = ""
+    search_keywords = ["latest", "today", "news", "price", "current", "weather", "who won", "stock"]
+    if any(keyword in user_text.lower() for keyword in search_keywords):
+        search_snippet = search_web(user_text)
+        live_info = f"\nLive Web Search Results for Context: {search_snippet}"
 
-        completion = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": request.text}
-            ]
-        )
-        
-        return {"response": completion.choices[0].message.content}
+    system_prompt = (
+        "You are Lisa, a friendly, modern, and concise voice assistant. "
+        "Keep your answers short, conversational, and direct, as they will be spoken out loud. "
+        f"{location_context}"
+        f"{live_info}"
+    )
 
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
+    completion = client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_text}
+        ]
+    )
+    
+    return {"response": completion.choices[0].message.content}
 
 # --- THE VOICE: Text-to-Speech ---
 @app.post("/speak")
