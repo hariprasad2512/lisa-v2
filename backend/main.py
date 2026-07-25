@@ -7,7 +7,7 @@ import shutil
 from dotenv import load_dotenv
 import edge_tts
 from fastapi.responses import FileResponse
-
+from typing import Optional, Dict
 
 # Initialize the FastAPI app
 app = FastAPI(title="Lisa Voice Assistant API")
@@ -30,6 +30,7 @@ client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 # Data model for the chat endpoint
 class ChatRequest(BaseModel):
     text: str
+    location: Optional[Dict[str, float]] = None
 
 class SpeakRequest(BaseModel):
     text: str
@@ -74,28 +75,25 @@ async def transcribe_audio(file: UploadFile = File(...)):
 async def chat_with_lisa(request: ChatRequest):
     try:
         # Send the user's text to Llama 3.3 via Groq
+        location_context = ""
+        if request.location:
+            location_context = f"\nUser's Current Coordinates: Latitude {request.location.get('latitude')}, Longitude {request.location.get('longitude')} (Tailored for hyper-local accuracy like weather or regional queries)."
+
+        system_prompt = (
+            "You are Lisa, a friendly, modern, and concise voice assistant. "
+            "Keep your answers short, conversational, and direct, as they will be spoken out loud. "
+            f"{location_context}"
+        )
+
         completion = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[
-                {
-                    "role": "system", 
-                    "content": "You are Lisa, a friendly, witty, and highly capable AI voice assistant. "
-                               "Keep your answers concise, natural, and conversational, as they will be spoken out loud. "
-                               "Do not use markdown formatting like bolding or lists, just use plain spoken text."
-                },
-                {
-                    "role": "user", 
-                    "content": request.text
-                }
-            ],
-            temperature=0.7, # 0.7 gives a good balance of creativity and focus
-            max_tokens=150   # Keeps responses relatively short and snappy
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": request.text}
+            ]
         )
         
-        # Extract the AI's text response
-        ai_response = completion.choices[0].message.content
-        
-        return {"status": "success", "response": ai_response}
+        return {"response": completion.choices[0].message.content}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

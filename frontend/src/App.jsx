@@ -16,7 +16,25 @@ function App() {
     ];
   });
 
-  
+    // Add location state
+  const [location, setLocation] = useState(null);
+
+  // Fetch location on initial load
+  useEffect(() => {
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setLocation({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+          });
+        },
+        (error) => {
+          console.warn("Geolocation permission denied or error:", error.message);
+        }
+      );
+    }
+  }, []);
 
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
@@ -54,7 +72,9 @@ function App() {
       const chatRes = await fetch("http://localhost:8000/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: userText }) 
+        body: JSON.stringify({ text: userText,
+           location: location
+         }) 
       });
       const chatData = await chatRes.json();
       const lisaText = chatData.response || chatData.message;
