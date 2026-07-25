@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Header from './components/Header';
 import ChatWindow from './components/ChatWindow';
 import MicrophoneControls from './components/MicrophoneControls';
@@ -6,14 +6,35 @@ import MicrophoneControls from './components/MicrophoneControls';
 function App() {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [messages, setMessages] = useState([
-    { role: 'assistant', content: 'Hi I am Lisa! How can I assist you today?' }
-  ]);
+  
+  // 1. Initialize state by checking localStorage FIRST
+  const [messages, setMessages] = useState(() => {
+    const savedChat = localStorage.getItem('lisa_guest_chat');
+    // If there is history, parse it. If not, start with the default greeting.
+    return savedChat ? JSON.parse(savedChat) : [
+      { role: 'assistant', content: 'Hi I am Lisa! How can I assist you today?' }
+    ];
+  });
+
+  
 
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
-  // NEW: Reference to hold the currently playing audio
+  // Reference to hold the currently playing audio
   const activeAudioRef = useRef(null); 
+
+  // 2. Auto-save to localStorage EVERY time messages update
+  useEffect(() => {
+    localStorage.setItem('lisa_guest_chat', JSON.stringify(messages));
+  }, [messages]);
+
+  // Optional: Function to clear memory (can be wired to a button in the Header)
+  const clearMemory = () => {
+    if (window.confirm("Are you sure you want to clear the chat memory?")) {
+      setMessages([{ role: 'assistant', content: 'Hi I am Lisa! How can I assist you today?' }]);
+      localStorage.removeItem('lisa_guest_chat');
+    }
+  };
 
   const processAudio = async (audioBlob) => {
     setIsProcessing(true);
@@ -50,7 +71,7 @@ function App() {
       const audioUrl = URL.createObjectURL(audioBlobResponse);
       const audio = new Audio(audioUrl);
       
-      // NEW: Store the playing audio in our ref so we can stop it later
+      // Store the playing audio in our ref so we can stop it later
       activeAudioRef.current = audio;
       audio.play();
 
@@ -63,7 +84,7 @@ function App() {
   };
 
   const startRecording = async () => {
-    // NEW UX FEATURE: Stop Lisa from talking if she is currently speaking!
+    // UX FEATURE: Stop Lisa from talking if she is currently speaking!
     if (activeAudioRef.current) {
       activeAudioRef.current.pause();
       activeAudioRef.current.currentTime = 0; // Rewind to start to fully clear it
@@ -112,7 +133,7 @@ function App() {
 
   return (
     <div className="flex flex-col h-screen bg-gray-950">
-      <Header />
+      <Header onClear={clearMemory} />
       
       <ChatWindow 
         messages={messages} 
