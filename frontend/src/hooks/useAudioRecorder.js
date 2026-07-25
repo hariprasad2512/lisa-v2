@@ -8,14 +8,15 @@ export function useAudioRecorder(messages, setMessages, currentUser, location) {
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const activeAudioRef = useRef(null);
-
+// Automatically use Render in production or localhost during development
+  const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
   const processAudio = async (audioBlob) => {
     setIsProcessing(true);
     try {
       const formData = new FormData();
       formData.append("file", audioBlob, "voice.webm");
       
-      const transcribeRes = await fetch("http://localhost:8000/transcribe", {
+      const transcribeRes = await fetch(`${API_BASE_URL}/transcribe`, {
         method: "POST",
         body: formData
       });
@@ -29,7 +30,7 @@ export function useAudioRecorder(messages, setMessages, currentUser, location) {
         await saveMessageToCloud(currentUser.id, 'user', userText);
       }
 
-      const chatRes = await fetch("http://localhost:8000/chat", {
+      const chatRes = await fetch(`${API_BASE_URL}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: userText, location }) 
@@ -44,7 +45,7 @@ export function useAudioRecorder(messages, setMessages, currentUser, location) {
         await saveMessageToCloud(currentUser.id, 'assistant', lisaText);
       }
 
-      const speakRes = await fetch("http://localhost:8000/speak", {
+      const speakRes = await fetch(`${API_BASE_URL}/speak`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: lisaText })

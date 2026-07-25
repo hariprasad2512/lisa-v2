@@ -8,6 +8,9 @@ import { useAuth } from './hooks/useAuth';
 import { useAudioRecorder } from './hooks/useAudioRecorder';
 
 function App() {
+
+  // Automatically use Render in production or localhost during development
+  const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
   // 1. Initialize messages (Checks localStorage first for guests)
   const [messages, setMessages] = useState(() => {
     const savedChat = localStorage.getItem('lisa_guest_chat');
