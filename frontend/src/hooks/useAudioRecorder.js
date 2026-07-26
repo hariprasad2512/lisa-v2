@@ -9,7 +9,9 @@ export function useAudioRecorder(messages, setMessages, currentUser, location) {
   const audioChunksRef = useRef([]);
   const activeAudioRef = useRef(null);
 // Automatically use Render in production or localhost during development
-  const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.DEV 
+    ? 'http://localhost:8000' 
+    : (import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000');
   const processAudio = async (audioBlob) => {
     setIsProcessing(true);
     try {

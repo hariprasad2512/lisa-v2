@@ -10,7 +10,29 @@ import { useAudioRecorder } from './hooks/useAudioRecorder';
 function App() {
 
   // Automatically use Render in production or localhost during development
-  const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
+  const API_BASE_URL = import.meta.env.DEV 
+    ? 'http://localhost:8000' 
+    : (import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000');
+    const [isServerReady, setIsServerReady] = useState(false);
+  const [isWakingUp, setIsWakingUp] = useState(true);
+ // Warm up / Ping backend on initial render
+  useEffect(() => {
+    const pingBackend = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/`);
+        if (response.ok) {
+          setIsServerReady(true);
+        }
+      } catch (error) {
+        console.warn("Server cold start pinging...", error);
+      } finally {
+        setIsWakingUp(false);
+      }
+    };
+
+    pingBackend();
+  }, [API_BASE_URL]);
+
   // 1. Initialize messages (Checks localStorage first for guests)
   const [messages, setMessages] = useState(() => {
     const savedChat = localStorage.getItem('lisa_guest_chat');
@@ -57,8 +79,8 @@ function App() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-neutral-950 text-neutral-50">
-      <Header onClear={clearMemory} />
+    <div className="flex flex-col h-screen overflow-hidden bg-neutral-950 text-neutral-50">
+      <Header onClear={clearMemory} isWakingUp={isWakingUp} isServerReady={isServerReady} />
       
       <ChatWindow 
         messages={messages} 
