@@ -18,8 +18,21 @@ def search_web(query: str) -> str:
 
 async def get_llm_response(user_text: str, location: dict = None) -> str:
     location_context = ""
-    if location:
-        location_context = f"\nUser's Current Coordinates: Latitude {location.get('latitude')}, Longitude {location.get('longitude')}."
+
+    # Keywords that explicitly request location-based information
+    location_keywords = [
+        "location", "where am i", "weather", "temperature", "forecast", 
+        "rain", "nearby", "near me", "local", "city", "place", "places",
+        "restaurant", "restaurants", "hotel", "hotels", "traffic", "here"
+    ]
+
+    # ONLY attach location coordinates if the user's query contains a location keyword
+    if location and location.get('latitude') and location.get('longitude'):
+        if any(keyword in user_text.lower() for keyword in location_keywords):
+            location_context = (
+                f"\nUser's Current Coordinates: Latitude {location.get('latitude')}, "
+                f"Longitude {location.get('longitude')}."
+            )
 
     live_info = ""
     search_keywords = ["latest", "today", "news", "price", "current", "weather", "who won", "stock"]
@@ -29,7 +42,7 @@ async def get_llm_response(user_text: str, location: dict = None) -> str:
 
     system_prompt = (
         "You are Lisa, a friendly, modern, and concise voice assistant. "
-        "Keep your answers short, conversational, and direct, as they will be spoken out loud. "
+        "Keep your answers short, conversational, and direct, as they will be spoken out loud."
         f"{location_context}"
         f"{live_info}"
     )
