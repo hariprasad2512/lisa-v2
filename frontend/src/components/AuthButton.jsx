@@ -23,6 +23,9 @@ export default function AuthButton() {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}`,
+        }
       });
       if (error) console.error("Login error:", error.message);
     } catch (err) {
@@ -35,17 +38,29 @@ export default function AuthButton() {
   };
 
   if (user) {
+    const avatarUrl = user.user_metadata?.avatar_url || user.user_metadata?.picture || null;
+    const displayName = user.user_metadata?.full_name || user.email || 'User';
+
     return (
-      <div className="flex items-center gap-2 rounded-full border border-neutral-800 bg-neutral-900 px-2 py-1.5 text-xs text-neutral-300 shadow-sm sm:px-3">
-        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-800 text-emerald-400">
-          <UserIcon className="w-4 h-4" />
+      <div className="flex items-center gap-1.5 rounded-full border border-neutral-800 bg-neutral-900 px-1.5 py-1 text-xs text-neutral-300 shadow-sm sm:gap-2 sm:px-3 sm:py-1.5">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-neutral-800 text-emerald-400">
+          {avatarUrl ? (
+            <img
+              src={avatarUrl}
+              alt={displayName}
+              className="h-full w-full object-cover"
+              referrerPolicy="no-referrer"
+            />
+          ) : (
+            <UserIcon className="w-4 h-4" />
+          )}
         </div>
-        <span className="hidden max-w-[110px] truncate sm:inline">{user.user_metadata.full_name}</span>
+        <span className="hidden max-w-[110px] truncate sm:inline">{displayName}</span>
         <button
           onClick={handleLogout}
           title="Sign Out"
           aria-label="Sign Out"
-          className="text-neutral-500 transition-colors hover:text-neutral-300"
+          className="rounded-full p-1 text-neutral-500 transition-colors hover:bg-neutral-800 hover:text-neutral-300"
         >
           <LogOut className="w-3.5 h-3.5" />
         </button>
