@@ -2,7 +2,7 @@ import { Mic, MicOff } from 'lucide-react';
 
 export default function MicrophoneControls({ isRecording, isProcessing, toggleRecording }) {
   return (
-    <footer className="p-8 bg-gray-950 border-t border-white/5 flex flex-col items-center justify-center gap-5 z-20 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.5)]">
+    <footer className="sticky bottom-0 z-40 w-full p-8 bg-gray-950 border-t border-white/5 flex flex-col items-center justify-center gap-5 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.5)]">
       
       <div className="relative group cursor-pointer" onClick={toggleRecording}>
         {/* Glowing Aura for Recording State */}

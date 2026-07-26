@@ -60,7 +60,7 @@ function App() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-neutral-950 text-neutral-50">
+    <div className="flex flex-col h-screen overflow-hidden bg-neutral-950 text-neutral-50">
       <Header onClear={clearMemory} />
       
       <ChatWindow 

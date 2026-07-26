@@ -3,7 +3,7 @@ import AuthButton from './AuthButton';
 
 export default function Header({ onClear }) {
   return (
-    <header className="flex items-center justify-between px-6 py-4 border-b border-neutral-800/60 bg-neutral-950/80 backdrop-blur-md">
+    <header className="sticky top-0 z-40 flex items-center justify-between px-6 py-4 border-b border-neutral-800/60 bg-neutral-950/80 backdrop-blur-md w-full">
       <div className="flex items-center gap-3">
         <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 flex items-center justify-center shadow-lg shadow-emerald-500/5">
           <AudioLines className="w-5 h-5 text-emerald-400 animate-pulse" />
