@@ -1,7 +1,7 @@
 import { AudioLines, Trash2 } from 'lucide-react';
 import AuthButton from './AuthButton';
 
-export default function Header({ onClear }) {
+export default function Header({ isServerReady, isWakingUp, onClear }) {
   return (
     <header className="sticky top-0 z-40 flex flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6 border-b border-neutral-800/60 bg-neutral-950/80 backdrop-blur-md w-full">
       <div className="flex items-center gap-3 min-w-0">
@@ -11,8 +11,23 @@ export default function Header({ onClear }) {
         <div className="min-w-0">
           <h1 className="text-base font-semibold tracking-tight text-neutral-100 truncate">Lisa</h1>
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span className="text-xs text-neutral-400 font-medium">Ready</span>
+            {/* Dynamic Cold Start Status Indicator */}
+            {isWakingUp ? (
+              <>
+                <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                <span className="text-xs text-amber-400 font-medium">Waking up server...</span>
+              </>
+            ) : isServerReady ? (
+              <>
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span className="text-xs text-neutral-400 font-medium">Ready</span>
+              </>
+            ) : (
+              <>
+                <span className="w-2 h-2 rounded-full bg-neutral-500"></span>
+                <span className="text-xs text-neutral-400 font-medium">Server Offline</span>
+              </>
+            )}
           </div>
         </div>
       </div>
