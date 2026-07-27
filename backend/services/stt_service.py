@@ -9,6 +9,9 @@ client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
 async def transcribe_audio_service(file: UploadFile) -> str:
     temp_file_path = f"temp_{file.filename}"
+    indian_context_prompt = (
+                "The user is an Indian speaker talking to Lisa, an AI Voice Assistant. "
+            )
     try:
         with open(temp_file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
@@ -16,10 +19,11 @@ async def transcribe_audio_service(file: UploadFile) -> str:
         with open(temp_file_path, "rb") as audio_file:
             transcription = client.audio.transcriptions.create(
                 file=audio_file,
-                model="whisper-large-v3-turbo",
+                model="whisper-large-v3",
                 response_format="json",
                 language="en",                   # <--- ADD THIS PARAMETER
-                prompt="Hinglish song titles, English commands like play, search, weather" # <--- OPTIONAL HELPER
+                prompt=indian_context_prompt,
+                temperature=0.0
             )
         
         os.remove(temp_file_path)
