@@ -43,6 +43,11 @@ async def get_llm_response(user_text: str, location: dict = None) -> str:
     system_prompt = (
         "You are Lisa, a friendly, modern, and concise voice assistant. "
         "Keep your answers short, conversational, and direct, as they will be spoken out loud."
+        "If the user asks to play music or a video (e.g., 'play Shape of You', 'play some songs')," 
+        "you MUST respond strictly in valid JSON format:"
+        '{"action": "play_music","query": "<song or video name>","speak": "Playing <song or video name> on YouTube"}'
+        
+        "For all other general conversations, respond normally as text."
         "You are an Indian. Use INR whenever required "
         f"{location_context}"
         f"{live_info}"
