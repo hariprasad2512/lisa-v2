@@ -20,10 +20,11 @@ export function useAudioRecorder(messages, setMessages, currentUser, location, r
     return locationKeywords.some((keyword) => normalized.includes(keyword));
   };
 
-// Automatically use Render in production or localhost during development
-const API_BASE_URL = import.meta.env.DEV 
+  // Automatically use Render in production or localhost during development
+  const API_BASE_URL = import.meta.env.DEV 
     ? 'http://localhost:8000' 
     : (import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000');
+
   const processAudio = async (audioBlob) => {
     setIsProcessing(true);
     try {
@@ -55,8 +56,20 @@ const API_BASE_URL = import.meta.env.DEV
         body: JSON.stringify({ text: userText, location: locationToSend }) 
       });
       const chatData = await chatRes.json();
-      const lisaText = chatData.response || chatData.message;
 
+      let lisaText = "";
+      let musicUrl = null;
+
+      // 1. Check if the response is a music action payload
+      if (chatData.action === "play_music") {
+        lisaText = chatData.speak || `Playing ${chatData.query} on YouTube`;
+        musicUrl = chatData.url;
+      } else {
+        // Standard conversational response
+        lisaText = chatData.response || chatData.message;
+      }
+
+      // Update UI with Lisa's response
       const finalMessages = [...newMessages, { role: 'assistant', content: lisaText }];
       setMessages(finalMessages);
 
@@ -64,6 +77,7 @@ const API_BASE_URL = import.meta.env.DEV
         await saveMessageToCloud(currentUser.id, 'assistant', lisaText);
       }
 
+      // 2. Fetch TTS audio for Lisa's response
       const speakRes = await fetch(`${API_BASE_URL}/speak`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -76,6 +90,13 @@ const API_BASE_URL = import.meta.env.DEV
       
       activeAudioRef.current = audio;
       audio.play();
+
+      // 3. Trigger music redirection after brief delay so TTS starts
+      if (musicUrl) {
+        setTimeout(() => {
+          window.open(musicUrl, '_blank', 'noopener,noreferrer');
+        }, 1200);
+      }
 
     } catch (error) {
       console.error("Error communicating with backend:", error);

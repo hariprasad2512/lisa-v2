@@ -17,7 +17,9 @@ async def transcribe_audio_service(file: UploadFile) -> str:
             transcription = client.audio.transcriptions.create(
                 file=audio_file,
                 model="whisper-large-v3-turbo",
-                response_format="json"
+                response_format="json",
+                language="en",                   # <--- ADD THIS PARAMETER
+                prompt="Hinglish song titles, English commands like play, search, weather" # <--- OPTIONAL HELPER
             )
         
         os.remove(temp_file_path)
