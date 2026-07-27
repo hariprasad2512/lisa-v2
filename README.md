@@ -16,7 +16,7 @@
 ## 🚀 Live Demo
 
 ### 🌐 Frontend
-**https://lisa-voice-assistant-ten.vercel.app/**
+**https://lisa-v2.vercel.app/**
 
 ### ⚙️ Backend API
 **https://lisa-v2.onrender.com/**
