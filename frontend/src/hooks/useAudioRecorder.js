@@ -94,9 +94,19 @@ export function useAudioRecorder(messages, setMessages, currentUser, location, r
       // 3. Trigger music redirection after brief delay so TTS starts
       if (musicUrl) {
         setTimeout(() => {
-          window.open(musicUrl, '_blank', 'noopener,noreferrer');
+          // Check if the device is mobile (iOS or Android)
+          const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+          if (isMobile) {
+            // Navigating the active window forces iOS Safari / Android Chrome 
+            // to trigger Universal Links and open the native YouTube app
+            window.location.href = musicUrl;
+          } else {
+            // Desktop fallback: open in a new tab
+            window.open(musicUrl, '_blank', 'noopener,noreferrer');
+          }
         }, 1200);
-      }
+      }   
 
     } catch (error) {
       console.error("Error communicating with backend:", error);
