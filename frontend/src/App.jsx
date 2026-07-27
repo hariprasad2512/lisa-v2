@@ -42,13 +42,14 @@ function App() {
   });
 
   // 2. Custom hooks for decoupled business logic
-  const location = useGeolocation();
+  const { location, requestLocation } = useGeolocation();
   const currentUser = useAuth(setMessages);
   const { isRecording, isProcessing, toggleRecording } = useAudioRecorder(
     messages, 
     setMessages, 
     currentUser, 
-    location
+    location,
+    requestLocation
   );
 
   // 3. Handle guest persistence via localStorage

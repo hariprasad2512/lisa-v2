@@ -1,13 +1,25 @@
 import { useState, useRef } from 'react';
 import { saveMessageToCloud } from '../chatService';
 
-export function useAudioRecorder(messages, setMessages, currentUser, location) {
+const locationKeywords = [
+  'location', 'where am i', 'weather', 'temperature', 'forecast',
+  'rain', 'nearby', 'near me', 'local', 'city', 'place', 'places',
+  'restaurant', 'restaurants', 'hotel', 'hotels', 'traffic', 'here'
+];
+
+export function useAudioRecorder(messages, setMessages, currentUser, location, requestLocation) {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const activeAudioRef = useRef(null);
+
+  const shouldRequestLocation = (text) => {
+    const normalized = text.toLowerCase();
+    return locationKeywords.some((keyword) => normalized.includes(keyword));
+  };
+
 // Automatically use Render in production or localhost during development
 const API_BASE_URL = import.meta.env.DEV 
     ? 'http://localhost:8000' 
@@ -32,10 +44,15 @@ const API_BASE_URL = import.meta.env.DEV
         await saveMessageToCloud(currentUser.id, 'user', userText);
       }
 
+      let locationToSend = null;
+      if (shouldRequestLocation(userText) && requestLocation) {
+        locationToSend = await requestLocation();
+      }
+
       const chatRes = await fetch(`${API_BASE_URL}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: userText, location }) 
+        body: JSON.stringify({ text: userText, location: locationToSend }) 
       });
       const chatData = await chatRes.json();
       const lisaText = chatData.response || chatData.message;
