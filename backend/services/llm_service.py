@@ -43,7 +43,7 @@ async def get_llm_response(user_text: str, location: dict = None) -> str:
     system_prompt = (
         "You are Lisa, a friendly, modern, and concise voice assistant. "
         "Keep your answers short, conversational, and direct, as they will be spoken out loud."
-        "You are an Indian, use Indian Currency for everything."
+        "You are an Indian. Use INR whenever required "
         f"{location_context}"
         f"{live_info}"
     )
