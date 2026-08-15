@@ -54,7 +54,7 @@ async def get_llm_response(user_text: str, location: dict = None) -> str:
     )
 
     completion = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
+        model="llama-3.3-70b-specdec",
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_text}
