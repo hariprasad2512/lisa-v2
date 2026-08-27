@@ -8,6 +8,22 @@ import { useAuth } from './hooks/useAuth';
 import { useAudioRecorder } from './hooks/useAudioRecorder';
 
 function App() {
+  const [theme, setTheme] = useState(() => {
+    const savedTheme = localStorage.getItem('lisa_theme');
+    const hasManualPreference = localStorage.getItem('lisa_theme_manual') === 'true';
+    if (hasManualPreference && (savedTheme === 'light' || savedTheme === 'dark')) return savedTheme;
+    return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  });
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', theme === 'dark');
+    localStorage.setItem('lisa_theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    localStorage.setItem('lisa_theme_manual', 'true');
+    setTheme((currentTheme) => currentTheme === 'dark' ? 'light' : 'dark');
+  };
 
   // Automatically use Render in production or localhost during development
   const API_BASE_URL = import.meta.env.DEV 
@@ -80,8 +96,8 @@ function App() {
   };
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-neutral-950 text-neutral-50">
-      <Header onClear={clearMemory} isWakingUp={isWakingUp} isServerReady={isServerReady} />
+    <div className="flex h-screen flex-col overflow-hidden bg-neutral-50 text-neutral-900 transition-colors dark:bg-neutral-950 dark:text-neutral-50">
+      <Header onClear={clearMemory} isWakingUp={isWakingUp} isServerReady={isServerReady} theme={theme} onToggleTheme={toggleTheme} />
       
       <ChatWindow 
         messages={messages} 

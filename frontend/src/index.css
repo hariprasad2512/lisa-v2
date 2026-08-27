@@ -1,4 +1,18 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Playlist Script by Artimasa — used for the Lisa wordmark. */
+@font-face {
+  font-family: "Playlist Script";
+  src: url("https://db.onlinewebfonts.com/t/1fed4454352f201d52b65ca5480afb2d.woff2") format("woff2");
+  font-display: swap;
+}
+
+.font-playlist {
+  font-family: "Playlist Script", cursive;
+  font-weight: 400;
+  letter-spacing: 0;
+}
 
 :root {
   --text: #6b6375;
@@ -110,6 +124,15 @@ code {
   line-height: 135%;
   padding: 4px 8px;
   background: var(--code-bg);
+}
+
+/* The global h1 rule above should not override the theme-aware wordmark. */
+.font-playlist {
+  color: #000;
+}
+
+.dark .font-playlist {
+  color: #fff;
 }
 
 @import "tailwindcss";

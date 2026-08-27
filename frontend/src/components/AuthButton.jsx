@@ -42,8 +42,8 @@ export default function AuthButton() {
     const displayName = user.user_metadata?.full_name || user.email || 'User';
 
     return (
-      <div className="flex items-center gap-1.5 rounded-full border border-neutral-800 bg-neutral-900 px-1.5 py-1 text-xs text-neutral-300 shadow-sm sm:gap-2 sm:px-3 sm:py-1.5">
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-neutral-800 text-emerald-400">
+      <div className="flex items-center gap-1.5 rounded-full border border-neutral-200 bg-neutral-100 px-1.5 py-1 text-xs text-neutral-700 shadow-sm dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-300 sm:gap-2 sm:px-3 sm:py-1.5">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-neutral-200 text-emerald-600 dark:bg-neutral-800 dark:text-emerald-400">
           {avatarUrl ? (
             <img
               src={avatarUrl}
@@ -62,7 +62,7 @@ export default function AuthButton() {
           aria-label="Sign Out"
           className="rounded-full p-1 text-neutral-500 transition-colors hover:bg-neutral-800 hover:text-neutral-300"
         >
-          <LogOut className="w-3.5 h-3.5" />
+          <LogOut className="h-3.5 w-3.5" />
         </button>
       </div>
     );
@@ -73,7 +73,7 @@ export default function AuthButton() {
       onClick={handleLogin}
       title="Sign in with Google"
       aria-label="Sign in with Google"
-      className="flex items-center justify-center gap-2 rounded-full border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm font-medium text-neutral-200 shadow-sm transition-all hover:bg-neutral-800 sm:px-3.5 sm:py-1.5"
+      className="flex items-center justify-center gap-2 rounded-full border border-neutral-200 bg-neutral-100 px-3 py-2 text-sm font-medium text-neutral-800 shadow-sm transition-all hover:bg-neutral-200 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:bg-neutral-800 sm:px-3.5 sm:py-1.5"
     >
       <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0" aria-hidden="true">
         <path
