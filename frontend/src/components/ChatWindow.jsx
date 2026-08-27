@@ -18,8 +18,8 @@ export default function ChatWindow({ messages, isProcessing }) {
   }, [messages, isProcessing]);
 
   return (
-    <main className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 scroll-smooth bg-gradient-to-b from-gray-950 to-gray-900">
-      <div className="max-w-3xl mx-auto space-y-8 mt-4">
+    <main className="flex-1 min-h-0 overflow-y-auto px-4 py-3 md:px-6 md:py-4 space-y-4 scroll-smooth bg-gradient-to-b from-gray-950 to-gray-900">
+      <div className="max-w-3xl mx-auto space-y-5">
         
         {messages.map((msg, index) => (
           <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>

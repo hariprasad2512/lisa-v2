@@ -5,15 +5,29 @@ export default function MicrophoneControls({
   isProcessing,
   toggleRecording,
 }) {
+  const isListening = isRecording && !isProcessing;
+
   return (
-    <footer className="sticky bottom-0 z-40 w-full border-t border-white/5 bg-gray-950 p-8 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.5)]">
-      <div className="flex flex-col items-center justify-center gap-5">
+    <footer
+      className={`sticky bottom-0 z-40 w-full border-t border-white/5 bg-gray-950 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.5)] transition-[padding] duration-300 ${
+        isListening ? 'px-4 py-5 sm:py-6' : 'px-4 py-3'
+      }`}
+    >
+      <div
+        className={`mx-auto flex max-w-3xl items-center justify-center transition-all duration-300 ${
+          isListening ? 'flex-col gap-4' : 'flex-row gap-3 sm:gap-4'
+        }`}
+      >
 
         {/* Microphone */}
-        <div className="relative flex h-28 w-28 items-center justify-center">
+        <div
+          className={`relative flex items-center justify-center transition-all duration-300 ${
+            isListening ? 'h-24 w-24' : 'h-12 w-12 flex-shrink-0'
+          }`}
+        >
 
           {/* Animated listening rings */}
-          {isRecording && !isProcessing && (
+          {isListening && (
             <>
               <span className="absolute inset-2 rounded-full border border-red-400/30 animate-[ping_2s_ease-out_infinite]" />
               <span className="absolute inset-0 rounded-full border border-red-400/20 animate-[ping_2s_ease-out_infinite_0.6s]" />
@@ -43,11 +57,12 @@ export default function MicrophoneControls({
                   : 'Start voice input'
             }
             className={`
-              relative z-10 flex h-20 w-20 items-center justify-center
+              relative z-10 flex items-center justify-center
               rounded-full shadow-2xl
               transition-all duration-300
               hover:scale-105 active:scale-95
               focus:outline-none focus:ring-2 focus:ring-teal-400/50
+              ${isListening ? 'h-16 w-16' : 'h-12 w-12'}
               ${
                 isRecording
                   ? 'bg-gradient-to-br from-red-500 to-rose-600 shadow-red-500/30 ring-4 ring-red-500/20'
@@ -57,20 +72,19 @@ export default function MicrophoneControls({
             `}
           >
             {isProcessing ? (
-              <Loader2 className="h-8 w-8 animate-spin text-teal-300" />
+              <Loader2 className="h-5 w-5 animate-spin text-teal-300" />
             ) : isRecording ? (
-              <MicOff className="h-8 w-8 text-white drop-shadow-md" />
+              <MicOff className={`${isListening ? 'h-7 w-7' : 'h-5 w-5'} text-white drop-shadow-md`} />
             ) : (
-              <Mic className="h-8 w-8 text-teal-400 drop-shadow-md" />
+              <Mic className="h-5 w-5 text-teal-400 drop-shadow-md" />
             )}
           </button>
         </div>
 
         {/* Animated sound waves */}
-        <div className="flex h-6 items-center justify-center gap-1">
-          {isRecording &&
-            !isProcessing &&
-            [1, 2, 3, 4, 5, 6, 7].map((bar) => (
+        {isListening && (
+          <div className="flex h-6 items-center justify-center gap-1">
+            {[1, 2, 3, 4, 5, 6, 7].map((bar) => (
               <span
                 key={bar}
                 className="w-1 rounded-full bg-red-400/80"
@@ -81,12 +95,17 @@ export default function MicrophoneControls({
                 }}
               />
             ))}
-        </div>
+          </div>
+        )}
 
         {/* Status */}
-        <div className="flex h-10 flex-col items-center gap-1.5">
+        <div
+          className={`flex items-center ${
+            isListening ? 'h-10 flex-col gap-1.5' : 'min-w-0 flex-row gap-2'
+          }`}
+        >
           <p
-            className={`text-base font-medium tracking-wide transition-colors duration-300 ${
+            className={`whitespace-nowrap text-sm font-medium tracking-wide transition-colors duration-300 ${
               isProcessing
                 ? 'text-teal-300'
                 : isRecording
@@ -101,7 +120,7 @@ export default function MicrophoneControls({
                 : 'Tap to speak'}
           </p>
 
-          <p className="text-[11px] uppercase tracking-wide text-gray-500">
+          <p className={`text-[11px] uppercase tracking-wide text-gray-500 ${isListening ? '' : 'hidden sm:block'}`}>
             {isProcessing
               ? 'Processing your voice'
               : isRecording
