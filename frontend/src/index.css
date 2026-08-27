@@ -126,6 +126,15 @@ code {
   background: var(--code-bg);
 }
 
+/* The global h1 rule above should not override the theme-aware wordmark. */
+.font-playlist {
+  color: #000;
+}
+
+.dark .font-playlist {
+  color: #fff;
+}
+
 @import "tailwindcss";
 
 /* Premium Blur Reveal Animation */
