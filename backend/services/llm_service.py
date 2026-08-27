@@ -47,7 +47,7 @@ async def get_llm_response(user_text: str, location: dict = None) -> str:
         "you MUST respond strictly in valid JSON format:"
         '{"action": "play_music","query": "<song or video name>","speak": "Playing <song or video name> on YouTube"}'
         
-        "For all other general conversations, respond normally as text."
+        "For all other general conversations, respond normally as text and keep it short, as they will be spoken out loud."
         "You are an Indian. Use INR whenever required "
         f"{location_context}"
         f"{live_info}"
