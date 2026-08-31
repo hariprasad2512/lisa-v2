@@ -21,8 +21,8 @@ export function useAudioRecorder(messages, setMessages, currentUser, location, r
   };
 
   // Automatically use Render in production or localhost during development
-  const API_BASE_URL = import.meta.env.DEV 
-    ? 'http://localhost:8000' 
+  const API_BASE_URL = import.meta.env.DEV
+    ? 'http://localhost:8000'
     : (import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000');
 
   const processAudio = async (audioBlob) => {
@@ -30,14 +30,14 @@ export function useAudioRecorder(messages, setMessages, currentUser, location, r
     try {
       const formData = new FormData();
       formData.append("file", audioBlob, "voice.webm");
-      
+
       const transcribeRes = await fetch(`${API_BASE_URL}/transcribe`, {
         method: "POST",
         body: formData
       });
       const transcribeData = await transcribeRes.json();
       const userText = transcribeData.text || transcribeData.transcription;
-      
+
       const newMessages = [...messages, { role: 'user', content: userText }];
       setMessages(newMessages);
 
@@ -53,7 +53,11 @@ export function useAudioRecorder(messages, setMessages, currentUser, location, r
       const chatRes = await fetch(`${API_BASE_URL}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: userText, location: locationToSend }) 
+        body: JSON.stringify({
+          text: userText,
+          location: locationToSend,
+          history: messages.map(m => ({ role: m.role, content: m.content }))
+        })
       });
       const chatData = await chatRes.json();
 
@@ -83,11 +87,11 @@ export function useAudioRecorder(messages, setMessages, currentUser, location, r
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: lisaText })
       });
-      
+
       const audioBlobResponse = await speakRes.blob();
       const audioUrl = URL.createObjectURL(audioBlobResponse);
       const audio = new Audio(audioUrl);
-      
+
       activeAudioRef.current = audio;
       audio.play();
 
@@ -106,7 +110,7 @@ export function useAudioRecorder(messages, setMessages, currentUser, location, r
             window.open(musicUrl, '_blank', 'noopener,noreferrer');
           }
         }, 1200);
-      }   
+      }
 
     } catch (error) {
       console.error("Error communicating with backend:", error);
@@ -120,7 +124,7 @@ export function useAudioRecorder(messages, setMessages, currentUser, location, r
     // Interrupt Lisa if she is currently speaking
     if (activeAudioRef.current) {
       activeAudioRef.current.pause();
-      activeAudioRef.current.currentTime = 0; 
+      activeAudioRef.current.currentTime = 0;
     }
 
     try {

@@ -16,7 +16,7 @@ def search_web(query: str) -> str:
         print(f"Web search error: {e}")
     return "No live search results found."
 
-async def get_llm_response(user_text: str, location: dict = None) -> str:
+async def get_llm_response(user_text: str, location: dict = None, history: list = None) -> str:
     location_context = ""
 
     # Keywords that explicitly request location-based information
@@ -53,12 +53,20 @@ async def get_llm_response(user_text: str, location: dict = None) -> str:
         f"{live_info}"
     )
 
+    messages = [{"role": "system", "content": system_prompt}]
+
+    if history:
+        for msg in history[-15:]:
+            role = msg.role if hasattr(msg, "role") else msg.get("role")
+            content = msg.content if hasattr(msg, "content") else msg.get("content")
+            if role in ("user", "assistant") and content:
+                messages.append({"role": role, "content": content})
+
+    messages.append({"role": "user", "content": user_text})
+
     completion = client.chat.completions.create(
         model="openai/gpt-oss-20b",
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_text}
-        ]
+        messages=messages
     )
     
     return completion.choices[0].message.content
