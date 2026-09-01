@@ -19,11 +19,19 @@ async def chat_with_lisa(request: ChatRequest):
         data = json.loads(response_text)
         if isinstance(data, dict) and data.get("action") == "play_music":
             song_query = data.get("query", "")
-            
+
             # Fetch direct YouTube watch link using yt-dlp
             direct_url = get_top_youtube_video(song_query)
             data["url"] = direct_url
-            
+
+            # Correct the spoken/displayed text based on whether we
+            # actually found a playable video, instead of trusting
+            # the LLM's assumed-success phrasing.
+            if direct_url:
+                data["speak"] = f"Playing {song_query} on YouTube"
+            else:
+                data["speak"] = f"Sorry, I couldn't find a playable video for {song_query} on YouTube."
+
             # Return JSON object with action, speak text, and direct video URL
             return data
     except json.JSONDecodeError:
