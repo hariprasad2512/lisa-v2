@@ -65,7 +65,7 @@ async def get_llm_response(user_text: str, location: dict = None, history: list 
     messages.append({"role": "user", "content": user_text})
 
     completion = client.chat.completions.create(
-        model="openai/gpt-oss-20b",
+        model="openai/gpt-oss-120b",
         messages=messages
     )
     
