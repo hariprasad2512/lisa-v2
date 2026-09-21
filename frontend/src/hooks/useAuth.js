@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
+import { useDispatch } from 'react-redux';
 import { supabase } from '../supabaseClient';
 import { fetchCloudMessages, migrateGuestChatToCloud } from '../chatService';
+import { setMessages } from '../store/slices/chatSlice';
 
-export function useAuth(setMessages) {
+export function useAuth() {
+  const dispatch = useDispatch();
   const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
@@ -12,7 +15,7 @@ export function useAuth(setMessages) {
         await migrateGuestChatToCloud(user.id);
         const cloudMsgs = await fetchCloudMessages(user.id);
         if (cloudMsgs.length > 0) {
-          setMessages(cloudMsgs);
+          dispatch(setMessages(cloudMsgs));
         }
       }
     };
@@ -28,7 +31,7 @@ export function useAuth(setMessages) {
     });
 
     return () => subscription.unsubscribe();
-  }, [setMessages]);
+  }, [dispatch]);
 
   return currentUser;
 }

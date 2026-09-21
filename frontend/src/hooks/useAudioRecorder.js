@@ -1,5 +1,14 @@
-import { useState, useRef } from 'react';
+import { useRef } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { saveMessageToCloud } from '../chatService';
+import { addMessage } from '../store/slices/chatSlice';
+import {
+  setRecording,
+  setProcessing,
+  selectIsRecording,
+  selectIsProcessing,
+} from '../store/slices/audioSlice';
+import { selectMessages } from '../store/slices/chatSlice';
 
 const locationKeywords = [
   'location', 'where am i', 'weather', 'temperature', 'forecast',
@@ -7,9 +16,11 @@ const locationKeywords = [
   'restaurant', 'restaurants', 'hotel', 'hotels', 'traffic', 'here'
 ];
 
-export function useAudioRecorder(messages, setMessages, currentUser, location, requestLocation) {
-  const [isRecording, setIsRecording] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
+export function useAudioRecorder(currentUser, location, requestLocation) {
+  const dispatch = useDispatch();
+  const messages = useSelector(selectMessages);
+  const isRecording = useSelector(selectIsRecording);
+  const isProcessing = useSelector(selectIsProcessing);
 
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
@@ -26,7 +37,7 @@ export function useAudioRecorder(messages, setMessages, currentUser, location, r
     : (import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000');
 
   const processAudio = async (audioBlob) => {
-    setIsProcessing(true);
+    dispatch(setProcessing(true));
     try {
       const formData = new FormData();
       formData.append("file", audioBlob, "voice.webm");
@@ -38,8 +49,7 @@ export function useAudioRecorder(messages, setMessages, currentUser, location, r
       const transcribeData = await transcribeRes.json();
       const userText = transcribeData.text || transcribeData.transcription;
 
-      const newMessages = [...messages, { role: 'user', content: userText }];
-      setMessages(newMessages);
+      dispatch(addMessage({ role: 'user', content: userText }));
 
       if (currentUser) {
         await saveMessageToCloud(currentUser.id, 'user', userText);
@@ -74,8 +84,7 @@ export function useAudioRecorder(messages, setMessages, currentUser, location, r
       }
 
       // Update UI with Lisa's response
-      const finalMessages = [...newMessages, { role: 'assistant', content: lisaText }];
-      setMessages(finalMessages);
+      dispatch(addMessage({ role: 'assistant', content: lisaText }));
 
       if (currentUser) {
         await saveMessageToCloud(currentUser.id, 'assistant', lisaText);
@@ -114,9 +123,9 @@ export function useAudioRecorder(messages, setMessages, currentUser, location, r
 
     } catch (error) {
       console.error("Error communicating with backend:", error);
-      setMessages(prev => [...prev, { role: 'assistant', content: "Connection error. Please check the backend server." }]);
+      dispatch(addMessage({ role: 'assistant', content: "Connection error. Please check the backend server." }));
     } finally {
-      setIsProcessing(false);
+      dispatch(setProcessing(false));
     }
   };
 
@@ -146,7 +155,7 @@ export function useAudioRecorder(messages, setMessages, currentUser, location, r
       };
 
       mediaRecorder.start();
-      setIsRecording(true);
+      dispatch(setRecording(true));
     } catch (error) {
       console.error("Error accessing microphone:", error);
       alert("Microphone access is required to proceed.");
@@ -156,7 +165,7 @@ export function useAudioRecorder(messages, setMessages, currentUser, location, r
   const stopRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
-      setIsRecording(false);
+      dispatch(setRecording(false));
     }
   };
 
