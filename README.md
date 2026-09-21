@@ -114,10 +114,38 @@ Once users authenticate via Supabase:
 ## Frontend
 
 - React
+- Redux Toolkit + React-Redux (`Provider`, `useSelector`, `useDispatch`, `createSlice`)
 - Vite
 - Tailwind CSS
 - Lucide Icons
 - Supabase JS Client
+
+## State Management (Redux Showcase)
+
+Core UI state lives in **Redux Toolkit** instead of scattered `useState`/prop-drilling. Side-effects (Supabase, FastAPI fetches, audio refs) stay outside the store.
+
+```text
+frontend/src/store/
+├── store.js              # configureStore: chat + theme + audio
+└── slices/
+    ├── chatSlice.js      # messages, setMessages, addMessage, clearChat
+    ├── themeSlice.js     # theme value, toggleTheme, setTheme
+    └── audioSlice.js     # isRecording, isProcessing
+```
+
+- `Provider` wiring in `src/main.jsx`
+- Components read state via `useSelector` (`ChatWindow`, `Header`, `MicrophoneControls`)
+- Updates via `useDispatch` (`addMessage`, `toggleTheme`, `setRecording`, `setProcessing`, `clearChat`)
+- Async work (transcribe → chat → speak, Supabase sync) stays in `useAudioRecorder` / `useAuth` / `chatService.js` and dispatches results into the store
+- Non-serializable values (`MediaRecorder`, `Audio` refs) intentionally stay out of Redux
+
+### 🔍 Verify with Redux DevTools (2 min)
+
+1. Install the "Redux DevTools" browser extension (Chrome/Edge/Firefox).
+2. Run the app (`backend :8000` + `frontend npm run dev` → http://127.0.0.1:5173/).
+3. Open browser DevTools (F12) → Redux tab → confirm state tree: `chat`, `theme`, `audio`.
+4. Try: tap mic → `audio/setRecording` + `chat/addMessage`; Sun/Moon → `theme/toggleTheme`; Trash → `chat/clearChat`.
+5. Use Diff / time-travel slider to step through actions.
 
 ---
 
@@ -179,11 +207,18 @@ lisa-v2/
     │   │   └── MicrophoneControls.jsx
     │   │
     │   ├── hooks/
-    │   │   ├── useAudioRecorder.js
-    │   │   ├── useAuth.js
+    │   │   ├── useAudioRecorder.js   # Redux-backed (dispatches addMessage, setRecording/Processing)
+    │   │   ├── useAuth.js            # dispatches setMessages on Supabase sync
     │   │   └── useGeolocation.js
     │   │
-    │   ├── App.jsx
+    │   ├── store/                  # 🗂️ REDUX
+    │   │   ├── store.js
+    │   │   └── slices/
+    │   │       ├── chatSlice.js
+    │   │       ├── themeSlice.js
+    │   │       └── audioSlice.js
+    │   │
+    │   ├── App.jsx                 # selectors + Provider consumers, no prop-drilling
     │   ├── chatService.js
     │   ├── supabaseClient.js
     │   └── index.css
