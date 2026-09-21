@@ -1,7 +1,13 @@
 import { AudioLines, Trash2, Sun, Moon } from 'lucide-react';
+import { useDispatch, useSelector } from 'react-redux';
 import AuthButton from './AuthButton';
+import { selectTheme, toggleTheme } from '../store/slices/themeSlice';
 
-export default function Header({ isServerReady, isWakingUp, onClear, theme, onToggleTheme }) {
+export default function Header({ isServerReady, isWakingUp, onClear }) {
+  const dispatch = useDispatch();
+  const theme = useSelector(selectTheme);
+
+  const onToggleTheme = () => dispatch(toggleTheme());
   return (
     <header className="sticky top-0 z-40 flex w-full flex-nowrap items-center justify-between gap-3 border-b border-neutral-200/80 bg-white/85 px-4 py-2.5 backdrop-blur-md transition-colors dark:border-neutral-800/60 dark:bg-neutral-950/80 sm:px-6">
       <div className="flex items-center gap-3 min-w-0">

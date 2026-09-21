@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import Header from './components/Header';
 import ChatWindow from './components/ChatWindow';
 import MicrophoneControls from './components/MicrophoneControls';
@@ -6,32 +7,26 @@ import { supabase } from './supabaseClient';
 import { useGeolocation } from './hooks/useGeoLocation';
 import { useAuth } from './hooks/useAuth';
 import { useAudioRecorder } from './hooks/useAudioRecorder';
+import { selectMessages, clearChat } from './store/slices/chatSlice';
+import { selectTheme } from './store/slices/themeSlice';
 
 function App() {
-  const [theme, setTheme] = useState(() => {
-    const savedTheme = localStorage.getItem('lisa_theme');
-    const hasManualPreference = localStorage.getItem('lisa_theme_manual') === 'true';
-    if (hasManualPreference && (savedTheme === 'light' || savedTheme === 'dark')) return savedTheme;
-    return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  });
+  const dispatch = useDispatch();
+  const messages = useSelector(selectMessages);
+  const theme = useSelector(selectTheme);
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark');
     localStorage.setItem('lisa_theme', theme);
   }, [theme]);
 
-  const toggleTheme = () => {
-    localStorage.setItem('lisa_theme_manual', 'true');
-    setTheme((currentTheme) => currentTheme === 'dark' ? 'light' : 'dark');
-  };
-
   // Automatically use Render in production or localhost during development
-  const API_BASE_URL = import.meta.env.DEV 
-    ? 'http://localhost:8000' 
+  const API_BASE_URL = import.meta.env.DEV
+    ? 'http://localhost:8000'
     : (import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000');
-    const [isServerReady, setIsServerReady] = useState(false);
+  const [isServerReady, setIsServerReady] = useState(false);
   const [isWakingUp, setIsWakingUp] = useState(true);
- // Warm up / Ping backend on initial render
+  // Warm up / Ping backend on initial render
   useEffect(() => {
     const pingBackend = async () => {
       try {
@@ -49,36 +44,26 @@ function App() {
     pingBackend();
   }, [API_BASE_URL]);
 
-  // 1. Initialize messages (Checks localStorage first for guests)
-  const [messages, setMessages] = useState(() => {
-    const savedChat = localStorage.getItem('lisa_guest_chat');
-    return savedChat ? JSON.parse(savedChat) : [
-      { role: 'assistant', content: 'Hi I am Lisa! How can I assist you today?' }
-    ];
-  });
-
-  // 2. Custom hooks for decoupled business logic
+  // Custom hooks for decoupled business logic (Redux-backed)
   const { location, requestLocation } = useGeolocation();
-  const currentUser = useAuth(setMessages);
-  const { isRecording, isProcessing, toggleRecording } = useAudioRecorder(
-    messages, 
-    setMessages, 
-    currentUser, 
+  const currentUser = useAuth();
+  const { toggleRecording } = useAudioRecorder(
+    currentUser,
     location,
     requestLocation
   );
 
-  // 3. Handle guest persistence via localStorage
+  // Handle guest persistence via localStorage
   useEffect(() => {
     if (!currentUser) {
       localStorage.setItem('lisa_guest_chat', JSON.stringify(messages));
     }
   }, [messages, currentUser]);
 
-  // 4. Clear chat memory function
+  // Clear chat memory function
   const clearMemory = async () => {
     if (window.confirm("Are you sure you want to clear the entire chat history?")) {
-      setMessages([{ role: 'assistant', content: 'Hi I am Lisa! How can I assist you today?' }]);
+      dispatch(clearChat());
       localStorage.removeItem('lisa_guest_chat');
 
       if (currentUser) {
@@ -97,18 +82,11 @@ function App() {
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-neutral-50 text-neutral-900 transition-colors dark:bg-neutral-950 dark:text-neutral-50">
-      <Header onClear={clearMemory} isWakingUp={isWakingUp} isServerReady={isServerReady} theme={theme} onToggleTheme={toggleTheme} />
-      
-      <ChatWindow 
-        messages={messages} 
-        isProcessing={isProcessing} 
-      />
-      
-      <MicrophoneControls 
-        isRecording={isRecording}
-        isProcessing={isProcessing}
-        toggleRecording={toggleRecording}
-      />
+      <Header onClear={clearMemory} isWakingUp={isWakingUp} isServerReady={isServerReady} />
+
+      <ChatWindow />
+
+      <MicrophoneControls toggleRecording={toggleRecording} />
     </div>
   );
 }

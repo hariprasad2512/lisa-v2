@@ -1,5 +1,8 @@
 import { useEffect, useRef } from 'react';
+import { useSelector } from 'react-redux';
 import { Loader2 } from 'lucide-react';
+import { selectMessages } from '../store/slices/chatSlice';
+import { selectIsProcessing } from '../store/slices/audioSlice';
 
 const inlineMarkdown = (text) => {
   const parts = text.split(/(\*\*[^*]+\*\*)/g);
@@ -68,7 +71,9 @@ const FadeRevealMessage = ({ content }) => {
   return <div className="inline-block w-full animate-blur-reveal"><MarkdownContent content={content} /></div>;
 };
 
-export default function ChatWindow({ messages, isProcessing }) {
+export default function ChatWindow() {
+  const messages = useSelector(selectMessages);
+  const isProcessing = useSelector(selectIsProcessing);
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {

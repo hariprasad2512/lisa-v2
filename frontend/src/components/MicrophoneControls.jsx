@@ -1,10 +1,13 @@
 import { Mic, MicOff, Loader2 } from 'lucide-react';
+import { useSelector } from 'react-redux';
+import {
+  selectIsRecording,
+  selectIsProcessing,
+} from '../store/slices/audioSlice';
 
-export default function MicrophoneControls({
-  isRecording,
-  isProcessing,
-  toggleRecording,
-}) {
+export default function MicrophoneControls({ toggleRecording }) {
+  const isRecording = useSelector(selectIsRecording);
+  const isProcessing = useSelector(selectIsProcessing);
   const isListening = isRecording && !isProcessing;
 
   return (
