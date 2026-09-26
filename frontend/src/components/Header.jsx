@@ -1,4 +1,4 @@
-import { AudioLines, Trash2, Sun, Moon } from 'lucide-react';
+import { Trash2, Sun, Moon } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import AuthButton from './AuthButton';
 import { selectTheme, toggleTheme } from '../store/slices/themeSlice';
@@ -10,13 +10,13 @@ export default function Header({ isServerReady, isWakingUp, onClear }) {
   const onToggleTheme = () => dispatch(toggleTheme());
   return (
     <header className="sticky top-0 z-40 flex w-full flex-nowrap items-center justify-between gap-3 border-b border-neutral-200/80 bg-white/85 px-4 py-2.5 backdrop-blur-md transition-colors dark:border-neutral-800/60 dark:bg-neutral-950/80 sm:px-6">
-      <div className="flex items-center gap-3 min-w-0">
-        <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 flex items-center justify-center shadow-lg shadow-emerald-500/5 flex-shrink-0">
-          <AudioLines className="w-5 h-5 text-emerald-400 animate-pulse" />
-        </div>
-        <div className="min-w-0">
-          <h1 className="m-0 font-playlist truncate text-3xl leading-none text-black sm:text-4xl dark:text-white">Lisa</h1>
-          <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1 min-w-0">
+        <div className="flex min-w-0 flex-col">
+          <div className="flex items-center gap-1">
+            <img src="/logo.svg" alt="Lisa logo" className="h-10 w-10 flex-shrink-0 object-contain sm:h-11 sm:w-11" />
+            <h1 className="m-0 font-playlist truncate text-3xl leading-none text-black sm:text-4xl dark:text-white">Lisa</h1>
+          </div>
+          <div className="flex items-center gap-2 pl-11 sm:pl-12">
             {/* Dynamic Cold Start Status Indicator */}
             {isWakingUp ? (
               <>
