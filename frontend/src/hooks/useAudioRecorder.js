@@ -97,12 +97,17 @@ export function useAudioRecorder(currentUser, location, requestLocation) {
         body: JSON.stringify({ text: lisaText })
       });
 
-      const audioBlobResponse = await speakRes.blob();
-      const audioUrl = URL.createObjectURL(audioBlobResponse);
-      const audio = new Audio(audioUrl);
+      if (!speakRes.ok) {
+        const errorDetails = await speakRes.text();
+        console.error(`Speech synthesis failed (${speakRes.status}):`, errorDetails);
+      } else {
+        const audioBlobResponse = await speakRes.blob();
+        const audioUrl = URL.createObjectURL(audioBlobResponse);
+        const audio = new Audio(audioUrl);
 
-      activeAudioRef.current = audio;
-      audio.play();
+        activeAudioRef.current = audio;
+        audio.play();
+      }
 
       // 3. Trigger music redirection after brief delay so TTS starts
       if (musicUrl) {
